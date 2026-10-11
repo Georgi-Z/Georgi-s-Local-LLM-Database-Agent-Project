@@ -1,0 +1,184 @@
+**Georgi's Local LLM Database Agent Project**
+ 
+*WHY?*
+ 
+I was inspired by the time my uncle took me to his workplace in a cyber security ward of a bank. He showed me various uses of linux and databases to secure operations and check on the health of the server. So, naturally I decided to give it a modern twist by implementing AI running locally on the same VMware virtual machine as the current Linux distros.
+The following was tried and tested on various Linux distributions including Mint, Stock Ubuntu, Debian and Kali. For simplicity this description entails the process I followed on Linux Mint.
+ 
+ 
+ 
+*Stage 1: Database*
+ 
+My first hurdle was that I had to get my LibreOffice database into a database format that Python can work with easily and I decided, with a little help from good old Claude, to stick to SQLite for my first version. It was a crucial and intelligent decision to do this before building my database because changing the format afterward would have been a nightmare (subtle backshadowing).
+ 
+ 
+ 
+*Stage 2: The joy of Python*
+ 
+After that grueling endeavour which really should not have taken that long, my next task was to someway, somehow write a Python program that can:
+ 
+import sqlite3
+ 
+connection = sqlite3.connect("database.db")
+ 
+cursor = connection.cursor()
+ 
+cursor.execute(
+    "SELECT user_id FROM users WHERE first_name = ? AND surname = ?",
+    ("John", "Smith")
+)
+ 
+result = cursor.fetchall()
+ 
+print(result)
+ 
+At this stage, there was no AI whatsoever apart from my beloved Claude which I used to debug this monstrosity of code but all in all this was just the proof step which checks that my Python program can communicate with my database successfully.
+ 
+ 
+ 
+*Stage 3: The wonders of running a local AI model*
+ 
+I had initially experienced some previously unforeseen obstacles with this since I had given myself a few rules I was inclined to follow:
+1. The AI must be run on the same VM as the database
+2. I couldn't use any other AI as a bridge for example get my "Cloud" Claude to create an API for me
+3. No Ollama Pro for reasons that will later become apparent
+ 
+However, eventually I was able to stumble upon a list of free models that can be run locally on linux here: 
+https://localaimaster.com/blog/free-local-ai-models 
+and decided that my best bet was llama 3.2 (the successor to 3.1) since I was sure debugging would be by all means necessary.
+Okay so we have our materials but what was the plan? 
+Well, conceptually it would look like this:
+ 
+Python Programme
+     ↓
+Ollama API (via http://localhost:11434) I'm not pirating, all is good.
+     ↓
+local LLM (llama 3.2 in our case)
+     ↓
+response
+ 
+No internet or cloud AI required.
+ 
+ 
+ 
+*Stage 4: How is llama 3.2 going to build SQL?*
+ 
+Now to introduce the interesting part:
+I need the give llama 3.2 the database schema and ask it to produce SQL. "So duh its on your computer just drag and drop." Well, you'd be correct.. but no. Once again, I had to add a section into my programme for this because The LLM itself does not directly access the database. Instead, my Python application acts as the intermediary, exposing controlled database operations as tools the model can request. So now the plan looked more like:
+ 
+      My command
+          ↓
+"What's John Smith's user ID?
+          ↓
+    Python program
+          ↓
+  llama 3.2 running locally
+          ↓
+ "SELECT UserID FROM Users
+  WHERE FirstName='John'
+  AND LastName='Smith';"
+          ↓
+    Python program
+          ↓
+       Database
+          ↓
+         162
+          ↓
+ "John Smith's user ID is 162." 
+ 
+ 
+ 
+*Stage 5: The home stretch*
+ 
+This leads on from stage 4 and is where I start making it a proper "I made a proper LLM agent locally" rather than "My LLM can generate SQL". Anyway, for this "last step" I had to give the model some kind of tool to access the database itself.
+ 
+Mine was in the form of these however many lines of code which hook on at the end of my programme: (Sorry for inaccurate indentation on pastebin)
+ 
+def execute_sql(query):
+import requests
+ 
+# 1. Database scheme
+ 
+scheme = """
+Table: Users
+- UserID INTEGER PRIMARY KEY
+- FirstName TEXT/STR
+- LastName TEXT/STR
+- Age INTEGER
+"""
+ 
+# 2. Asking the user what they want
+ 
+question = input("What would you like to find out? ")
+ 
+ 
+# 3. Building the prompt for llama 3.2
+ 
+prompt = f"""
+You are a database assistant.
+ 
+Here is the database scheme:
+ 
+{scheme}
+ 
+The user has asked:
+ 
+{question}
+ 
+Write an SQL query that answers the user's question.
+ 
+Only return SQL query.              ← This line came from debugging because it would for some reason start explaining everything.
+"""
+ 
+ 
+# 4. Sending the prompt to llama 3.2
+ 
+ 
+response = requests.post(
+    "http://localhost:11434/api/generate",
+    json={
+        "model": "llama3.2",
+        "prompt": prompt,
+        "stream": False
+    }
+)
+ 
+ 
+# 5. Get response from llama 3.2
+ 
+result = response.json()
+ 
+sql_query = result["response"]
+ 
+print("\nGenerated SQL:")
+print(sql_query)
+ 
+ 
+All that was left to do was tell llama 3.2 something along the lines of "You have access to a SQL database. If you need information from the database, use the execute_sql tool; so what is the user ID of John Smith?"
+ 
+Now the model can reason:
+ 
+User:
+"What is the user ID of John Smith?"
+ 
+llama3.2 reasoning:
+I need database information.
+ 
+Tool call:
+execute_sql(
+    "SELECT UserID
+     FROM Users
+     WHERE FirstName = 'John'
+     AND LastName = 'Smith';"
+)
+ 
+Tool result:
+162
+ 
+llama3.2:
+"John Smith's user ID is 162."
+ 
+And voila, eureka, etc etc. Honestly this project drained a lot more time than I initially expected from my summer schedule but I must say that it has genuinely been so worth it for the fulfillment you get from a finished project like this. I am incredibly excited to get on with more projects like these in University and keep growing my knowledge in this field.
+Thank you so very much for reading and if there are any further questions, or you would like to see some screenshots I took of the process, feel free to email me at Georgi.Za@protonmail.com
+ 
+Until next time, Georgi Z
