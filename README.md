@@ -1,3 +1,5 @@
+^^ **READ MAIN ABOVE FIRST** ^^
+
 I created a Local LLM Database Agent in several virtualized contexts to investigate the relationship between autonomous reasoning and systems engineering. In order to assess how different OS configurations and environment requirements impacted local model inference via Ollama, I installed SQLite databases in Linux Mint, Ubuntu, Debian, and Kali Linux virtual machines. I examined the crucial trade-offs between system latency, hardware resource allocation, and query accuracy by examining text-to-SQL semantic mapping across these various distributions. My practical understanding of virtualization, Linux system deployment, and agentic AI architectures was enhanced by mitigating model hallucinations while maintaining cross-platform compatibility.
 
 
