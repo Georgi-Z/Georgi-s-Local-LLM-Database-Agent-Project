@@ -15,7 +15,7 @@ My first hurdle was that I had to get my LibreOffice database into a database fo
  
 *Stage 2: The joy of Python*
  
-After that grueling endeavour which really should not have taken that long, my next task was to someway, somehow write a Python program that can:
+After that grueling endeavour which really should not have taken that long, my next task was to somehow write a Python program that can:
  
 import sqlite3
  
@@ -32,7 +32,7 @@ result = cursor.fetchall()
  
 print(result)
  
-At this stage, there was no AI whatsoever apart from my beloved Claude which I used to debug this monstrosity of code but all in all this was just the proof step which checks that my Python program can communicate with my database successfully.
+At this stage, there was no AI whatsoever apart from my Claude which I used to debug this monstrosity of code but all in all this was just the proof step which checks that my Python program can communicate with my database successfully.
  
  
  
